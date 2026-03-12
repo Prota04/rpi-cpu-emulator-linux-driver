@@ -1,0 +1,1 @@
+savedcmd_/home/filip/Projekat/cpu_driver/Module.symvers :=  scripts/mod/modpost -M -m -a      -o /home/filip/Projekat/cpu_driver/Module.symvers -n -T /home/filip/Projekat/cpu_driver/modules.order -i Module.symvers -e 

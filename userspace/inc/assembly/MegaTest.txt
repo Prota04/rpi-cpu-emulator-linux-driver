@@ -1,0 +1,189 @@
+; ============================================================
+; Comprehensive ISA test program
+; Tests every instruction and addressing mode in the ISA
+; Expected final state is commented at the end of each section
+; ============================================================
+
+
+; ============================================================
+; SECTION 1: MOV — immediate and register-to-register
+; ============================================================
+MOV R0, 10          ; R0 = 10
+MOV R1, 20          ; R1 = 20
+MOV R2, R0          ; R2 = R0 = 10
+MOV R3, R1          ; R3 = R1 = 20
+; Expected: R0=10, R1=20, R2=10, R3=20
+
+
+; ============================================================
+; SECTION 2: ADD — immediate and register
+; ============================================================
+MOV R0, 5
+MOV R1, 3
+ADD R0, 10          ; R0 = 5 + 10 = 15  (immediate)
+ADD R0, R1          ; R0 = 15 + 3 = 18  (register)
+ADD R1, R1          ; R1 = 3 + 3 = 6    (register added to itself)
+; Expected: R0=18, R1=6
+
+
+; ============================================================
+; SECTION 3: SUB — immediate and register
+; ============================================================
+MOV R0, 50
+MOV R1, 8
+SUB R0, 20          ; R0 = 50 - 20 = 30 (immediate)
+SUB R0, R1          ; R0 = 30 - 8 = 22  (register)
+SUB R1, R1          ; R1 = 8 - 8 = 0    (register subtracted from itself)
+; Expected: R0=22, R1=0
+
+
+; ============================================================
+; SECTION 4: AND — immediate and register
+; ============================================================
+MOV R0, 255        ; R0 = 255  (11111111)
+MOV R1, 15        ; R1 = 15   (00001111)
+AND R0, 63        ; R0 = 255 & 63  = 63  (00111111) (immediate)
+AND R0, R1          ; R0 = 63  & 15  = 15  (00001111) (register)
+; Expected: R0=15, R1=15
+
+
+; ============================================================
+; SECTION 5: OR — immediate and register
+; ============================================================
+MOV R0, 240        ; R0 = 240  (11110000)
+MOV R1, 15        ; R1 = 15   (00001111)
+OR  R0, 1        ; R0 = 240 | 1   = 241 (11110001) (immediate)
+OR  R0, R1          ; R0 = 241 | 15  = 255 (11111111) (register)
+; Expected: R0=255, R1=15
+
+
+; ============================================================
+; SECTION 6: NOT
+; ============================================================
+MOV R0, 0           ; R0 = 0
+NOT R0              ; R0 = ~0 = 0xFFFFFFFFFFFFFFFF (all bits set)
+MOV R1, 255
+NOT R1              ; R1 = ~255
+; Expected: R0=0xFFFFFFFFFFFFFFFF, R1=0xFFFFFFFFFFFFFF00
+
+
+; ============================================================
+; SECTION 7: CMP + JE — equal branch taken
+; ============================================================
+MOV R0, 42
+MOV R1, 42
+CMP R0, R1
+JE  EQUAL_TAKEN
+MOV R2, 0           ; should be skipped
+JMP EQUAL_DONE
+EQUAL_TAKEN:
+    MOV R2, 1       ; R2 = 1 confirms branch was taken
+EQUAL_DONE:
+; Expected: R2=1
+
+
+; ============================================================
+; SECTION 8: CMP + JG — greater branch taken
+; ============================================================
+MOV R0, 100
+MOV R1, 50
+CMP R0, R1          ; R0 > R1
+JG  GREATER_TAKEN
+MOV R3, 0           ; should be skipped
+JMP GREATER_DONE
+GREATER_TAKEN:
+    MOV R3, 1       ; R3 = 1 confirms branch was taken
+GREATER_DONE:
+; Expected: R3=1
+
+
+; ============================================================
+; SECTION 9: CMP + JL — less branch taken
+; ============================================================
+MOV R0, 10
+MOV R1, 90
+CMP R0, R1          ; R0 < R1
+JL  LESS_TAKEN
+MOV R2, 0           ; should be skipped
+JMP LESS_DONE
+LESS_TAKEN:
+    MOV R2, 1       ; R2 = 1 confirms branch was taken
+LESS_DONE:
+; Expected: R2=1
+
+
+; ============================================================
+; SECTION 10: CMP flags persist — jump used after other MOVs
+; ============================================================
+MOV R0, 7
+MOV R1, 3
+CMP R0, R1          ; flags set: R0 > R1
+MOV R2, 99          ; flags should be unchanged by MOV
+MOV R3, 88          ; flags should be unchanged by MOV
+JG  FLAGS_PERSIST_OK
+MOV R2, 0           ; should be skipped
+JMP FLAGS_PERSIST_DONE
+FLAGS_PERSIST_OK:
+    MOV R2, 1       ; R2 = 1 confirms flags survived MOVs
+FLAGS_PERSIST_DONE:
+; Expected: R2=1
+
+
+; ============================================================
+; SECTION 11: Loop — countdown using SUB + CMP + JG
+; Counts R0 from 5 down to 0, R1 counts iterations
+; ============================================================
+MOV R0, 5
+MOV R1, 0
+LOOP_START:
+    ADD R1, 1       ; R1 = iteration count
+    SUB R0, 1       ; R0--
+    CMP R0, 0
+    JG  LOOP_START  ; loop while R0 > 0
+; Expected: R0=0, R1=5
+
+
+; ============================================================
+; SECTION 12: Nested logic — compute max(R0,R1) + min(R2,R3)
+; ============================================================
+MOV R0, 30
+MOV R1, 70
+MOV R2, 15
+MOV R3, 45
+
+; Find max(R0, R1) → store in R0
+CMP R0, R1
+JG  KEEP_R0
+MOV R0, R1          ; R0 = max = 70
+KEEP_R0:
+
+; Find min(R2, R3) → store in R2
+CMP R2, R3
+JL  KEEP_R2
+MOV R2, R3          ; R2 = min = 15
+KEEP_R2:
+
+ADD R0, R2          ; R0 = max + min = 70 + 15 = 85
+; Expected: R0=85
+
+
+; ============================================================
+; SECTION 13: MMIO — write output, read input
+; ============================================================
+MOV R0, 1
+MOV [0xFFFE], R0    ; write 1 to output MMIO
+MOV R1, [0xFFFD]    ; read from input MMIO
+MOV R2, 0
+CMP R1, R2          ; check if input was 0
+JE  INPUT_WAS_ZERO
+MOV R3, 1
+JMP INPUT_DONE
+INPUT_WAS_ZERO:
+    MOV R3, 0
+INPUT_DONE:
+MOV R3, 5
+; ============================================================
+; SECTION 14: MMIO — signal processor halt
+; ============================================================
+MOV [0xFFFE], R2    ; Turn off LED
+; Expected: emulator signals completion

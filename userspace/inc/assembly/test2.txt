@@ -1,0 +1,109 @@
+; R1 = current value
+; R2 = SUM
+; R3 = SMALL_COUNT
+
+        MOV R2, 0
+        MOV R3, 0
+
+; -------- NUMBER 0 --------
+        MOV R1, [0x1000]
+
+        CMP R1, 10
+        JG ADD0_SUM
+
+CHECK0_SMALL:
+        CMP R1, 5
+        JL ADD0_SMALL
+        JMP NEXT1
+
+ADD0_SUM:
+        ADD R2, R1
+        JMP CHECK0_SMALL
+
+ADD0_SMALL:
+        ADD R3, 1
+
+NEXT1:
+
+; -------- NUMBER 1 --------
+        MOV R1, [0x1008]
+
+        CMP R1, 10
+        JG ADD1_SUM
+
+CHECK1_SMALL:
+        CMP R1, 5
+        JL ADD1_SMALL
+        JMP NEXT2
+
+ADD1_SUM:
+        ADD R2, R1
+        JMP CHECK1_SMALL
+
+ADD1_SMALL:
+        ADD R3, 1
+
+NEXT2:
+
+; -------- NUMBER 2 --------
+        MOV R1, [0x1010]
+
+        CMP R1, 10
+        JG ADD2_SUM
+
+CHECK2_SMALL:
+        CMP R1, 5
+        JL ADD2_SMALL
+        JMP NEXT3
+
+ADD2_SUM:
+        ADD R2, R1
+        JMP CHECK2_SMALL
+
+ADD2_SMALL:
+        ADD R3, 1
+
+NEXT3:
+
+; -------- NUMBER 3 --------
+        MOV R1, [0x1018]
+
+        CMP R1, 10
+        JG ADD3_SUM
+
+CHECK3_SMALL:
+        CMP R1, 5
+        JL ADD3_SMALL
+        JMP NEXT4
+
+ADD3_SUM:
+        ADD R2, R1
+        JMP CHECK3_SMALL
+
+ADD3_SMALL:
+        ADD R3, 1
+
+NEXT4:
+
+; -------- NUMBER 4 --------
+        MOV R1, [0x1020]
+
+        CMP R1, 10
+        JG ADD4_SUM
+
+CHECK4_SMALL:
+        CMP R1, 5
+        JL ADD4_SMALL
+        JMP END
+
+ADD4_SUM:
+        ADD R2, R1
+        JMP CHECK4_SMALL
+
+ADD4_SMALL:
+        ADD R3, 1
+
+END:
+
+        MOV [0x2000], R2
+        MOV [0x2008], R3

@@ -1,0 +1,5 @@
+MOV R0, 1; Upisi 1 u registar 0
+MOV [0xFFFE], R0; Upisi vrijednost registra 0 u MMIO adresu za output diodu
+MOV R0, [0xFFFD]; Procitaj vrijednost dugmeta
+SUB R0, 1; Oduzmi vrijednost registra 0 sa 1
+MOV [0xFFFE], R0; Upisi vrijednost registra 0 u MMIO adresu za output diodu

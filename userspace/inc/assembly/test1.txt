@@ -1,0 +1,24 @@
+; setup
+MOV   R1,   42 
+MOV R2, 87
+MOV R3, 0
+
+CMP R1, R2
+
+; loop start
+JG R1_IS_GREATER
+JL R2_IS_GREATER
+JE THEY_ARE_EQUAL ;equal
+
+R1_IS_GREATER:
+    MOV R3, R1
+    JMP FINISH
+
+R2_IS_GREATER:
+    MOV R3, R2
+    JMP FINISH
+
+THEY_ARE_EQUAL:
+    MOV R3, R1
+
+FINISH:

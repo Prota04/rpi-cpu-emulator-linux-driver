@@ -1,0 +1,21 @@
+{
+    "configurations": [
+        {
+            "name": "RPi ARM",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "${workspaceFolder}/..",
+
+                "/home/prota/Fakultet/treca/RTOS/pi-headers/linux-headers-6.12.47+rpt-rpi-v7/include",
+                "/home/prota/Fakultet/treca/RTOS/pi-headers/linux-headers-6.12.47+rpt-rpi-v7/arch/arm/include",
+                "/home/prota/Fakultet/treca/RTOS/pi-headers/linux-headers-6.12.47+rpt-common-rpi/include",
+                "/home/prota/Fakultet/treca/RTOS/pi-headers/linux-headers-6.12.47+rpt-common-rpi/arch/arm/include"
+            ],
+            "defines": [],
+            "compilerPath": "/usr/bin/arm-linux-gnueabihf-gcc",
+            "cStandard": "gnu11",
+            "intelliSenseMode": "linux-gcc-arm"
+        }
+    ],
+    "version": 4
+}
