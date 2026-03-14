@@ -85,7 +85,7 @@ int run(const char *chrdev, char **instruction_text, int count)
             break;
         }
 
-        if (i > count)
+        if (i >= count)
         {
             printf("Prevazidjen broj instrukcija! Program se gasi\n");
             break;
@@ -107,6 +107,8 @@ int run(const char *chrdev, char **instruction_text, int count)
             write(fd, &write_buf, sizeof(write_value));
 
             write_buf.instruction = fetch_next(read_buf.pc);
+
+            write_buf.is_instruction = 1;
 
             break;
         case EXEC_PENDING_MEM_WRITE:

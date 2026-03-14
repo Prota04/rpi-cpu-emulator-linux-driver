@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -e
 
-PROJECT_DIR="$HOME/Projekat"
+PROJECT_DIR="$HOME/Projekti/RTOS"
 DRIVER_DIR="$PROJECT_DIR/cpu_driver"
 USERSPACE_DIR="$PROJECT_DIR/userspace"
 

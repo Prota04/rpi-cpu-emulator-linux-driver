@@ -44,6 +44,12 @@ typedef struct my_cpu
     u8 pending_mmio_read;
 } my_cpu;
 
+typedef struct cpu_context
+{
+    my_cpu cpu;
+    instruction pending_instruction;
+} cpu_context;
+
 static int led_gpio[NUM_LEDS] = {LED_1, LED_2, LED_3, LED_4};
 
 static struct gpio_desc *leds[NUM_LEDS];
@@ -68,8 +74,6 @@ static struct class *cpu_class;
 
 static unsigned int clock_speed = 500;
 module_param(clock_speed, uint, 0444);
-
-static instruction pending_instruction;
 
 static irqreturn_t run_irq_thread(int irq, void *data)
 {
@@ -602,15 +606,15 @@ static int cpu_open(struct inode *inode, struct file *fp)
     }
     atomic_set(&cpu_paused, val);
 
-    my_cpu *cpu;
+    cpu_context *ctx;
 
-    cpu = kzalloc(sizeof(*cpu), GFP_KERNEL);
-    if (!cpu)
+    ctx = kzalloc(sizeof(*ctx), GFP_KERNEL);
+    if (!ctx)
     {
         return -ENOMEM;
     }
 
-    fp->private_data = cpu;
+    fp->private_data = ctx;
 
     return 0;
 }
@@ -629,7 +633,9 @@ static ssize_t cpu_write(struct file *fp, const char __user *user_buf, size_t le
         return -EINVAL;
     }
 
-    my_cpu *cpu = fp->private_data;
+    cpu_context *ctx = fp->private_data;
+
+    my_cpu *cpu = &ctx->cpu;
 
     write_value wv;
     if (copy_from_user(&wv, user_buf, sizeof(write_value)))
@@ -640,7 +646,7 @@ static ssize_t cpu_write(struct file *fp, const char __user *user_buf, size_t le
 
     if (wv.is_instruction)
     {
-        pending_instruction = wv.instruction;
+        ctx->pending_instruction = wv.instruction;
     }
     else
     {
@@ -659,7 +665,9 @@ static ssize_t cpu_read(struct file *fp, char __user *user_buf, size_t len, loff
         return -EINVAL;
     }
 
-    my_cpu *cpu = fp->private_data;
+    cpu_context *ctx = fp->private_data;
+
+    my_cpu *cpu = &ctx->cpu;
 
     pr_info("r0: %llu, r1: %llu, r2: %llu, r3: %llu\n", cpu->regs[0], cpu->regs[1], cpu->regs[2], cpu->regs[3]);
     pr_info("pc: %llu\n", cpu->pc);
@@ -684,7 +692,7 @@ static ssize_t cpu_read(struct file *fp, char __user *user_buf, size_t len, loff
         pause();
     }
 
-    s32 exec_res = execute_instruction(cpu, pending_instruction);
+    s32 exec_res = execute_instruction(cpu, ctx->pending_instruction);
     read_value read_buf = {
         .pc = cpu->pc,
         .exec_return = exec_res};

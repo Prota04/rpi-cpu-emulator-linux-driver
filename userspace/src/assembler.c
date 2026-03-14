@@ -434,11 +434,6 @@ instruction *parse_assembly(const char *fileName, size_t *num_instr, char ***ins
         }
     }
 
-    label_address *entry, *tmp;
-    HASH_ITER(hh, labels, entry, tmp) {
-        printf("Label: %s → %llu\n", entry->key, entry->value);
-    }
-
     fseek(file, 0, SEEK_SET); // Reset file pointer to the beginning for second pass
 
     instruction *instructions = NULL; // Array to hold parsed instructions
