@@ -6,8 +6,7 @@
 #include "cpu_emulator_userspace.h"
 #include "assembler.h"
 
-extern uint8_t *memory;  // Simulated memory
-extern size_t memory_size;  // Size of the simulated memory
+extern uint8_t memory[];  // Simulated memory
 
 int main(int argc, char *argv[])
 {
@@ -15,13 +14,11 @@ int main(int argc, char *argv[])
     strcpy(path, "./inc/assembly/");
     strcat(path, argv[1]);
 
-    initialize_memory(0x3000);  // Initialize memory
-
     size_t num_instructions = 0;
     char **instruction_text = NULL;
 
     instruction *instructions = parse_assembly(path, &num_instructions, &instruction_text);  // Parse assembly code from file
-    store_machine_code(memory, memory_size, instructions, num_instructions);  // Store the parsed instructions in memory
+    store_machine_code(memory, MEM_SIZE, instructions, num_instructions);  // Store the parsed instructions in memory
 
     run("cpu_emulator", instruction_text, num_instructions);
 

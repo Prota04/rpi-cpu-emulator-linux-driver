@@ -8,19 +8,7 @@
 
 #include "cpu_emulator_userspace.h"
 
-uint8_t *memory;    // Simulated memory
-size_t memory_size; // Size of the simulated memory
-
-void initialize_memory(size_t size)
-{
-    memory = (uint8_t *)calloc(size, sizeof(uint8_t));
-    if (memory == NULL)
-    {
-        // Handle memory allocation failure
-        exit(EXIT_FAILURE);
-    }
-    memory_size = size;
-}
+uint8_t memory[MEM_SIZE] = {0};    // Simulated memory
 
 static void read_from_memory(uint64_t address, uint64_t *return_value)
 {
@@ -57,7 +45,7 @@ int run(const char *chrdev, char **instruction_text, int count)
 
     strcpy(path, "/dev/");
     strcat(path, chrdev);
-
+    
     int fd;
     fd = open(path, O_RDWR);
     if (fd < 0)

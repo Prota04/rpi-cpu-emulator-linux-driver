@@ -5,7 +5,8 @@
 
 #include "cpu_uapi.h"
 
-void initialize_memory(size_t size);
+#define MEM_SIZE 0x3000
+
 int run(const char *chrdev, char **instruction_text, int count);
 
 #endif

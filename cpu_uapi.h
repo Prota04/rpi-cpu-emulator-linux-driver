@@ -79,4 +79,12 @@ typedef struct read_value
     __u8 padding[4];
 } read_value;
 
+typedef struct mem_access
+{
+    __u64 addr;
+    __u8 type; // Read(0) or Write(1)
+
+    __u8 padding[7];
+} mem_access;
+
 #endif

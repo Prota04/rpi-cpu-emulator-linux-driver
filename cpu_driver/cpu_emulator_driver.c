@@ -650,8 +650,12 @@ static ssize_t cpu_write(struct file *fp, const char __user *user_buf, size_t le
     }
     else
     {
+        my_cpu prev_state = *cpu;
+
         u64 *reg = get_register(cpu, cpu->pending_reg_idx);
         *reg = wv.val;
+
+        set_diodes(*cpu, prev_state);
     }
 
     return len;
