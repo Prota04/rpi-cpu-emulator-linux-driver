@@ -319,15 +319,13 @@ void run_cache_sim()
 
     //Ucitavanje tragova
     size_t total_traces = 0;
-    mem_access *traces = load_traces("/dev/mem_trace", &total_traces);
+    mem_access *traces = load_traces("/dev/trace_collector", &total_traces);
     
     if (!traces || total_traces == 0) {
         printf("Nema učitanih tragova ili je došlo do greške pri čitanju.\n");
         if (traces) free(traces);
         return;
     }
-
-    printf("\nUspjesno ucitano %zu memorijskih pristupa.\n", total_traces);
 
     // Inicijalizacija keša
     CacheLevel l1, l2, l3;
@@ -347,12 +345,12 @@ void run_cache_sim()
         uint32_t l1_hits_before = l1.hits;
         cache_access(&l1, traces, i, total_traces);
 
-        if (l1.hits == l1_hits_before) // L1 Miss
+        if (num_lvls > 1 && l1.hits == l1_hits_before) // L1 Miss
         {
             uint32_t l2_hits_before = l2.hits;
             cache_access(&l2, traces, i, total_traces);
 
-            if (l2.hits == l2_hits_before) // L2 Miss
+            if (num_lvls > 2 && l2.hits == l2_hits_before) // L2 Miss
             {
                 cache_access(&l3, traces, i, total_traces);
             }
@@ -364,6 +362,16 @@ void run_cache_sim()
     printf("   IZVJESTAJ HIJERARHIJSKE SIMULACIJE (%" PRIu32 " NIVO%s)\n", num_lvls, num_lvls == 1 ? "" : "A");
     printf("============================================================================\n");
     printf("Ukupno memorijskih pristupa: %zu\n\n", total_traces);
+    size_t num_reads = 0;
+    for (int i = 0; i < total_traces; i++)
+    {
+        if (!traces[i].type)
+        {
+            num_reads++;
+        }
+    }
+    printf("Broj citanja: %zu\n", num_reads);
+    printf("Broj upisa: %zu\n", total_traces - num_reads);
 
     // L1 Statistika
     printf("L1 CACHE:\n");
@@ -396,9 +404,10 @@ void run_cache_sim()
     }
 
     // Globalna statistika (ono sto je prolo kroz sve nivoe i otislo u RAM)
-    double global_miss_rate = ((double)l3.misses / total_traces) * 100;
+    uint64_t RAM_visits = (num_lvls == 1) ? l1.misses : (num_lvls == 2) ? l2.misses : l3.misses;
+    double global_miss_rate = ((double)RAM_visits / total_traces) * 100;
     printf("GLOBALNA STATISTIKA:\n");
-    printf("  Ukupno odlazaka u RAM: %" PRIu64 "\n", l3.misses);
+    printf("  Ukupno odlazaka u RAM: %" PRIu64 "\n", RAM_visits);
     printf("  Globalni Miss Rate:    %.2f%%\n", global_miss_rate);
     printf("============================================================================\n");
 

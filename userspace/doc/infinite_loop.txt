@@ -1,0 +1,6 @@
+MOV R0, 1
+
+LOOP:
+    CMP R0, R1
+    ADD R0, 1
+    JG LOOP

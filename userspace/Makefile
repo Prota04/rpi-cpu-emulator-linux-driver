@@ -4,7 +4,7 @@ CC = gcc
 CXX = gcc
 LD = gcc
 
-INC = -I inc/header -I ..
+INC = -I inc -I ..
 CFLAGS = -Wall
 LIBDIR =
 LIB =

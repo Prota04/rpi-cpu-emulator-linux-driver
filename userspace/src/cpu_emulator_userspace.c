@@ -49,10 +49,10 @@ int run(char **instruction_text, int count)
         return fd_cpu_emulator;
     }
 
-    fd_cache_sim = open("/dev/mem_trace", O_WRONLY);
+    fd_cache_sim = open("/dev/trace_collector", O_WRONLY);
     if (fd_cache_sim < 0)
     {
-        perror("Character device 'mem_trace' nije pronadjen!\n");
+        perror("Character device 'trace_collector' nije pronadjen!\n");
         return fd_cache_sim;
     }
 
