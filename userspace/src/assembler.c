@@ -517,7 +517,7 @@ instruction *parse_assembly(const char *fileName, size_t *num_instr, char ***ins
 
     *num_instr = num_instructions;
 
-    // Oslobađanje cjelokupne heš tabele prije izlaska iz funkcije
+    // Freeing the entire hash table
     label_address *current_label, *tmp;
     HASH_ITER(hh, labels, current_label, tmp) {
         HASH_DEL(labels, current_label);

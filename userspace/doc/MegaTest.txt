@@ -182,6 +182,8 @@ INPUT_WAS_ZERO:
     MOV R3, 0
 INPUT_DONE:
 MOV R3, 5
+MOV R0, 0
+MOV [0xFFFE], R0    ; write 0 to output MMIO
 
 ; ============================================================
 ; Test program za uporedjivanje LRU i OPT algoritama

@@ -18,7 +18,7 @@ static uint32_t assoc[3];
 static uint32_t lvl_size[3];
 static ReplacementPolicy policy;
 
-// Efikasno računanje fast_log2 za brojeve koji su stepen dvojke
+// Efficient calculation of fast_log2 for numbers that are powers of two
 static inline uint32_t fast_log2(uint32_t n) {
     uint32_t log = 0;
     while (n >>= 1) ++log;
@@ -57,9 +57,9 @@ static int find_optimal_victim(CacheLevel *cache, CacheSet *set, mem_access *tra
     uint32_t index_bits = (uint32_t)fast_log2(cache->num_sets);
 
     for (uint32_t i = 0; i < cache->associativity; i++) {
-        size_t next_use = SIZE_MAX; // Pretpostavimo da se vise ne koristi
+        size_t next_use = SIZE_MAX; // Assume it is no longer used
         
-        // Trazi sljedecu upotrebu ovog taga u buducnosti
+        // Search for the next use of this tag in the future
         for (size_t j = current_idx + 1; j < total_traces; j++) {
             uint64_t future_tag = traces[j].addr >> (offset_bits + index_bits);
             if (future_tag == set->lines[i].tag) {
@@ -68,7 +68,7 @@ static int find_optimal_victim(CacheLevel *cache, CacheSet *set, mem_access *tra
             }
         }
 
-        if (next_use == SIZE_MAX) return i; // Ako se nikad vise ne koristi, on je savrsena zrtva
+        if (next_use == SIZE_MAX) return i; // If it is never used again, it is a perfect victim
 
         if (next_use > furthest_appearance) {
             furthest_appearance = next_use;
@@ -90,7 +90,7 @@ static void cache_access(CacheLevel *cache, mem_access *all_traces, size_t curre
 
     CacheSet *set = &cache->sets[index];
 
-    // 1. Provjera HIT-a
+    // 1. Hit check
     for (uint32_t i = 0; i < cache->associativity; i++) {
         if (set->lines[i].valid && set->lines[i].tag == tag) {
             cache->hits++;
@@ -99,7 +99,7 @@ static void cache_access(CacheLevel *cache, mem_access *all_traces, size_t curre
         }
     }
 
-    // 2. MISS - trazi prazno mjesto
+    // 2. MISS - look for an empty slot
     cache->misses++;
     for (uint32_t i = 0; i < cache->associativity; i++) {
         if (!set->lines[i].valid) {
@@ -110,7 +110,7 @@ static void cache_access(CacheLevel *cache, mem_access *all_traces, size_t curre
         }
     }
 
-    // 3. Evikcija (Ako je set pun)
+    // 3. Eviction (If the set is full)
     int victim_idx = 0;
     if (policy == ALG_LRU) {
         uint32_t min_time = UINT32_MAX;
@@ -157,24 +157,24 @@ static mem_access* load_traces(const char *device_path, size_t *out_count) {
     mem_access buffer[READ_BATCH_SIZE];
     ssize_t bytes_read;
 
-    // Citaj iz kernel drajvera dok god ima podataka
+    // Read from the kernel driver as long as there is data
     while ((bytes_read = read(fd, buffer, sizeof(buffer))) > 0) {
         size_t entries = bytes_read / sizeof(mem_access);
         
-        // Provjeri da li treba prosiriti niz
+        // Check if the array needs to be expanded
         if (count + entries > capacity) {
-            capacity *= 2; // Udvostruci kapacitet
+            capacity *= 2; // Double the capacity
             mem_access *temp = realloc(traces, capacity * sizeof(mem_access));
             if (!temp) {
                 perror("Greska: Nije moguce realocirati memoriju za tragove");
                 close(fd);
                 *out_count = count;
-                return traces; // Vrati ono sto je do sada ucitano
+                return traces; // Return what has been loaded so far
             }
             traces = temp;
         }
         
-        // Kopiraj procitane podatke u glavni niz
+        // Copy the read data into the main array
         memcpy(&traces[count], buffer, entries * sizeof(mem_access));
         count += entries;
     }
@@ -186,7 +186,7 @@ static mem_access* load_traces(const char *device_path, size_t *out_count) {
     close(fd);
     *out_count = count;
     
-    // Opciono: smanjiti alociranu memoriju na tacnu velicinu (shrink to fit)
+    // Optional: shrink the allocated memory to the exact size (shrink to fit)
     if (count > 0 && count < capacity) {
         mem_access *temp = realloc(traces, count * sizeof(mem_access));
         if (temp) {
@@ -314,10 +314,10 @@ static void configure_cache_sim_parameters()
 
 void run_cache_sim()
 {
-    // Konfiguracija parametara
+    // Parameter configuration
     configure_cache_sim_parameters();
 
-    //Ucitavanje tragova
+    // Loading traces
     size_t total_traces = 0;
     mem_access *traces = load_traces("/dev/trace_collector", &total_traces);
     
@@ -327,7 +327,7 @@ void run_cache_sim()
         return;
     }
 
-    // Inicijalizacija keša
+    // Cache initialization
     CacheLevel l1, l2, l3;
 
     cache_init(&l1, 1);
@@ -340,7 +340,7 @@ void run_cache_sim()
         cache_init(&l3, 3);
     }
 
-    // Pokretanje simulacije
+    // Running the simulation
     for (size_t i = 0; i < total_traces; i++) {
         uint32_t l1_hits_before = l1.hits;
         cache_access(&l1, traces, i, total_traces);
@@ -357,7 +357,7 @@ void run_cache_sim()
         }
     }
     
-    // Ispis statistike
+    // Printing statistics
     printf("\n============================================================================\n");
     printf("   IZVJESTAJ HIJERARHIJSKE SIMULACIJE (%" PRIu32 " NIVO%s)\n", num_lvls, num_lvls == 1 ? "" : "A");
     printf("============================================================================\n");
@@ -373,13 +373,13 @@ void run_cache_sim()
     printf("Broj citanja: %zu\n", num_reads);
     printf("Broj upisa: %zu\n", total_traces - num_reads);
 
-    // L1 Statistika
+    // L1 Statistics
     printf("L1 CACHE:\n");
     printf("  Pogoci:    %" PRIu64 "\n", l1.hits);
     printf("  Promasaji: %" PRIu64 "\n", l1.misses);
     printf("  Miss Rate: %.2f%%\n\n", ((double)l1.misses / (l1.hits + l1.misses)) * 100);
 
-    // L2 Statistika (pristupi su zapravo promasaji L1)
+    // L2 Statistics (accesses are actually L1 misses)
     if (num_lvls > 1)
     {
         printf("L2 CACHE:\n");
@@ -391,7 +391,7 @@ void run_cache_sim()
         }
     }
 
-    // L3 Statistika (pristupi su zapravo promasaji L2)
+    // L3 Statistics (accesses are actually L2 misses)
     if (num_lvls > 2)
     {
         printf("L3 CACHE:\n");
@@ -403,7 +403,7 @@ void run_cache_sim()
         }
     }
 
-    // Globalna statistika (ono sto je prolo kroz sve nivoe i otislo u RAM)
+    // Global statistics (data that passed through all levels and went to RAM)
     uint64_t RAM_visits = (num_lvls == 1) ? l1.misses : (num_lvls == 2) ? l2.misses : l3.misses;
     double global_miss_rate = ((double)RAM_visits / total_traces) * 100;
     printf("GLOBALNA STATISTIKA:\n");
@@ -411,7 +411,7 @@ void run_cache_sim()
     printf("  Globalni Miss Rate:    %.2f%%\n", global_miss_rate);
     printf("============================================================================\n");
 
-    // Ciscenje memorije
+    // Memory cleanup
     cache_free(&l1);
     if (num_lvls > 1)
     {
